@@ -1,0 +1,18 @@
+key	value	required	description
+project_name	AWI-GEN_v2g	no	Project label used in reports.
+output_dir	results/v2g	yes	Directory where pipeline outputs will be written.
+genome_build_awigen	GRCh37	no	Genome build used by AWI-Gen sentinel and credible-set coordinates.
+sentinel_file	/path/to/awigen_sentinels.tsv	yes	AWI-Gen sentinel variants used for V2G mapping.
+credible_set_file	/path/to/awigen_credible_sets.tsv	yes	AWI-Gen credible-set variants with posterior probabilities.
+liftover_chain	/path/to/hg19ToHg38.over.chain.gz	no	UCSC LiftOver chain used where GRCh38 mapping is required.
+annovar_nearest_gene_file	/path/to/annovar_nearest_gene.tsv	yes	Nearest-gene annotation output for AWI-Gen sentinels.
+vep_pp50_gene_annotation_file	/path/to/pp50_vep_gene_annotations.tsv	yes	VEP gene annotation file for credible-set variants with PP >50%.
+eqtlgen_file	/path/to/eqtlgen_sentinel_gene.tsv	yes	eQTLGen sentinel-gene evidence file.
+gtex_file	/path/to/gtex_sentinel_gene.tsv	yes	GTEx sentinel-gene evidence file.
+sabr_file	/path/to/sabr_sentinel_gene.tsv	yes	SABR sentinel-gene evidence file.
+amr_file	/path/to/african_american_eqtl_sentinel_gene.tsv	yes	African American cis-eQTL sentinel-gene evidence file.
+pqtl_olink_file	/path/to/olink_sentinel_protein.tsv	yes	UK Biobank Olink African-ancestry pQTL sentinel-protein evidence file.
+pqtl_masc_file	/path/to/masc_sentinel_protein.tsv	yes	MASC plasma pQTL sentinel-protein evidence file.
+rare_variant_file	/path/to/rare_variant_single_variant_and_gene_based.tsv	yes	Combined rare-variant single-variant and gene-based evidence file.
+rare_disease_file	/path/to/orphanet_respiratory_sentinel_gene.csv	yes	Orphanet Mendelian respiratory-disease sentinel-gene evidence file.
+mouse_knockout_file	/path/to/mouse_knockout_respiratory_sentinel_gene.csv	yes	IMPC mouse-knockout respiratory phenotype sentinel-gene evidence file.

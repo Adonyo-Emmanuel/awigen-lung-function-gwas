@@ -1,0 +1,34 @@
+.DS_Store
+.Rhistory
+.RData
+.Rproj.user/
+
+# Local machine paths and run-specific settings
+*.local.tsv
+*.local.env
+
+# Generated outputs
+/results/*
+!/results/README.md
+/outputs/
+/v2g_pipeline_results/
+**/results/*
+!**/results/README.md
+**/outputs/
+
+# Large or restricted data files should be stored outside Git
+data/*
+!data/README.md
+*.bed
+*.bim
+*.fam
+*.bgen
+*.sample
+*.vcf
+*.vcf.gz
+*.bcf
+*.tsv.gz
+*.csv.gz
+*.rds
+*.RDS
+*.RData
