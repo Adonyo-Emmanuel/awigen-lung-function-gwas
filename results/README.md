@@ -1,4 +1,4 @@
-# Results Directory
+# Results
 
-Generated results should be written here or to another local output directory specified in the pipeline configuration. Result files are ignored by Git and should be regenerated from the code and configuration.
+Generated analysis outputs are not version-controlled in this repository. The V2G pipeline writes results to the `output_dir` declared in the local configuration file.
 

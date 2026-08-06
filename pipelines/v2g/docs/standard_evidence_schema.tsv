@@ -1,0 +1,42 @@
+column	description
+evidence_line	One of the seven AWI-Gen V2G lines of evidence.
+evidence_source	Specific resource or analysis source within an evidence line.
+evidence_class	Higher-level evidence class used for summaries.
+source_file	Input file from which the standardised row was derived.
+sentinel_snp	AWI-Gen sentinel variant identifier.
+variant_id	Variant identifier from AWI-Gen or the external resource.
+rsid	Variant rsID where available.
+chromosome_b37	Chromosome coordinate on GRCh37/hg19 where available.
+position_b37	Base-pair coordinate on GRCh37/hg19 where available.
+chromosome_b38	Chromosome coordinate on GRCh38/hg38 where available.
+position_b38	Base-pair coordinate on GRCh38/hg38 where available.
+effect_allele	AWI-Gen effect allele.
+other_allele	Other AWI-Gen allele.
+trait	AWI-Gen lung-function trait for the sentinel.
+traits	All AWI-Gen lung-function traits associated with the sentinel where available.
+gwas_p_value	AWI-Gen association P value for the sentinel or credible-set variant.
+gwas_z_score	AWI-Gen association Z score.
+gwas_beta	AWI-Gen effect estimate.
+gwas_se	AWI-Gen standard error.
+posterior_probability	Credible-set posterior probability for the AWI-Gen variant.
+gene_id	Gene identifier, usually Ensembl gene ID, with version suffix removed.
+gene_symbol	Gene symbol where available.
+gene_or_protein	Gene or protein label used for cross-evidence summaries.
+molecular_trait_type	Gene, gene expression or protein abundance, depending on the evidence source.
+molecular_trait_id	Source-specific molecular trait identifier.
+tissue_or_protein_panel	Tissue, cell type, assay or protein panel.
+p_value	External-resource association P value after source-specific filtering.
+fdr	False discovery rate or FDR-equivalent q value after source standardisation.
+q_value	Source q value retained separately where useful.
+threshold_p_value	Source-specific P-value threshold, such as a fastQTL gene-level nominal threshold.
+effect_estimate	External-resource effect estimate harmonised to the AWI-Gen effect allele where applicable.
+standard_error	External-resource standard error.
+z_score	External-resource Z score.
+distance_from_sentinel_bp	Distance in base pairs from the AWI-Gen sentinel.
+consequence	Variant consequence annotation.
+impact	Variant impact annotation.
+sift	SIFT annotation.
+polyphen	PolyPhen annotation.
+cadd_phred	CADD PHRED score.
+evidence_detail	Concise source-specific descriptor retained for traceability.
+

@@ -2,7 +2,7 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1) {
-  stop("Usage: Rscript 00_check_config.R <config.tsv>")
+  stop("Usage: Rscript check_v2g_config.R <config.tsv>")
 }
 
 script_arg <- commandArgs(FALSE)
@@ -26,7 +26,7 @@ cfg_table[, status := "ok"]
 cfg_table[required %in% c("yes", "true", "1") & is.na(value), status := "missing required value"]
 cfg_table[is_file_key & !is.na(value) & exists == FALSE, status := "file not found"]
 
-report_file <- file.path(out_dir, "00_config_check.tsv")
+report_file <- file.path(out_dir, "config_check.tsv")
 write_tsv(cfg_table, report_file)
 
 failed <- cfg_table[status != "ok"]

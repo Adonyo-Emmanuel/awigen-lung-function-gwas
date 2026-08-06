@@ -1,4 +1,4 @@
-# Data Directory
+# Data
 
-Place local input data and external resources here if needed for a local run. Large datasets and restricted-access files should not be committed to Git.
+The AWI-Gen GWAS analyses require controlled-access cohort data and large external resources that are not distributed in this repository. Input file locations are supplied through local configuration files under `pipelines/v2g/config/`.
 

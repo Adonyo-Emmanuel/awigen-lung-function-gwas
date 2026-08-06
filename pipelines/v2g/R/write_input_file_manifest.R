@@ -2,7 +2,7 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1) {
-  stop("Usage: Rscript 01_create_reproducibility_manifest.R <config.tsv>")
+  stop("Usage: Rscript write_input_file_manifest.R <config.tsv>")
 }
 
 script_arg <- commandArgs(FALSE)
@@ -21,18 +21,18 @@ manifest <- rbindlist(
   fill = TRUE
 )
 
-write_tsv(manifest, file.path(out_dir, "01_input_manifest.tsv"))
-write_tsv(cfg_table, file.path(out_dir, "01_config_snapshot.tsv"))
+write_tsv(manifest, file.path(out_dir, "input_file_manifest.tsv"))
+write_tsv(cfg_table, file.path(out_dir, "config_snapshot.tsv"))
 
 writeLines(
   capture.output(sessionInfo()),
-  file.path(out_dir, "01_R_session_info.txt")
+  file.path(out_dir, "R_session_info.txt")
 )
 
 git_status <- tryCatch(
   system2("git", c("status", "--short"), stdout = TRUE, stderr = TRUE),
   error = function(e) "git status unavailable"
 )
-writeLines(git_status, file.path(out_dir, "01_git_status.txt"))
+writeLines(git_status, file.path(out_dir, "git_status.txt"))
 
-message("Reproducibility manifest written to: ", out_dir)
+message("Input file manifest written to: ", out_dir)
