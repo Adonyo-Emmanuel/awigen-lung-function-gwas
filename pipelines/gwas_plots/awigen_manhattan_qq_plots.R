@@ -32,7 +32,7 @@ if (dir.exists(user_library)) {
   .libPaths(c(user_library, .libPaths()))
 }
 
-required_packages <- c("data.table", "ggplot2", "ggrepel", "patchwork")
+required_packages <- c("data.table", "ggplot2", "ggrepel")
 missing_packages <- required_packages[
   !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
 ]
@@ -48,7 +48,6 @@ suppressPackageStartupMessages({
   library(data.table)
   library(ggplot2)
   library(ggrepel)
-  library(patchwork)
 })
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -428,6 +427,27 @@ create_qq_plot <- function(trait, qq, lambda_gc) {
     publication_theme(base_size = 9)
 }
 
+# Arrange ggplots in a grid with their panels aligned. Uses gtable (installed
+# with ggplot2) so no extra layout package is needed.
+arrange_plots <- function(plots, ncol) {
+  grobs <- lapply(plots, ggplotGrob)
+  max_widths <- do.call(grid::unit.pmax, lapply(grobs, `[[`, "widths"))
+  grobs <- lapply(grobs, function(g) {
+    g$widths <- max_widths
+    g
+  })
+
+  nrow <- ceiling(length(grobs) / ncol)
+  cells <- c(grobs, rep(list(grid::nullGrob()), nrow * ncol - length(grobs)))
+
+  gtable::gtable_matrix(
+    name = "arranged",
+    grobs = matrix(cells, nrow = nrow, ncol = ncol, byrow = TRUE),
+    widths = grid::unit(rep(1, ncol), "null"),
+    heights = grid::unit(rep(1, nrow), "null")
+  )
+}
+
 save_plot <- function(plot, stem, width_mm, height_mm) {
   for (fmt in output_formats) {
     filename <- paste0(stem, ".", fmt)
@@ -532,7 +552,7 @@ combined_manhattan <- lapply(plot_order, function(trait) {
 })
 
 save_plot(
-  wrap_plots(combined_manhattan, ncol = 1L),
+  arrange_plots(combined_manhattan, ncol = 1L),
   file.path(manhattan_dir, "AWI-Gen_manhattan_all_traits"),
   width_mm = 180, height_mm = 200
 )
@@ -543,7 +563,7 @@ combined_qq <- lapply(plot_order, function(trait) {
 })
 
 save_plot(
-  wrap_plots(combined_qq, ncol = 2L),
+  arrange_plots(combined_qq, ncol = 2L),
   file.path(qq_dir, "AWI-Gen_qq_all_traits"),
   width_mm = 170, height_mm = 170
 )
