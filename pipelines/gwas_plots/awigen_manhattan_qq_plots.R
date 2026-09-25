@@ -52,8 +52,14 @@ suppressPackageStartupMessages({
 
 args <- commandArgs(trailingOnly = TRUE)
 
-input_dir <- if (length(args) >= 1L) args[[1L]] else
-  "/data/gen1/ADONYO_PhD/PhD_Resources/AWIGEN_METAL_RESULTS/UPDATED"
+if (length(args) < 1L) {
+  stop(
+    "Usage: Rscript awigen_manhattan_qq_plots.R <input_dir> [output_dir]\n",
+    "  input_dir: directory containing the METAL .tbl files for the four traits."
+  )
+}
+
+input_dir <- args[[1L]]
 
 output_dir <- if (length(args) >= 2L) args[[2L]] else
   file.path(input_dir, "publication_manhattan_qq_plots")
