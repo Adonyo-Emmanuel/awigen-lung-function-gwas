@@ -19,7 +19,8 @@
 #   * Expected quantiles are (i - 0.5) / n; the grey band is the pointwise 95%
 #     confidence interval from the Beta(i, n - i + 1) order-statistic
 #     distribution.
-#   * lambda GC (median chi-squared / 0.4549) is printed on each panel.
+#   * lambda GC (median chi-squared / 0.4549) is printed in the upper-left
+#     corner of each panel, above the diagonal.
 #   * Overlapping points in the dense null region are removed after rounding
 #     to the plotting resolution, which does not change the appearance.
 #
@@ -387,16 +388,12 @@ prepare_qq_data <- function(p_values) {
   qq[]
 }
 
-create_qq_plot <- function(trait, qq, lambda_gc, n_snps) {
+create_qq_plot <- function(trait, qq, lambda_gc) {
   axis_max <- ceiling(max(qq$expected, qq$observed, qq$ci_upper) + 0.2)
 
   label <- sprintf(
     "lambda[GC] == %s",
     formatC(lambda_gc, format = "f", digits = 3)
-  )
-  n_label <- sprintf(
-    "italic(n) == \"%s\"",
-    format(n_snps, big.mark = ",")
   )
 
   ggplot(qq, aes(x = expected, y = observed)) +
@@ -410,15 +407,9 @@ create_qq_plot <- function(trait, qq, lambda_gc, n_snps) {
     ) +
     geom_point(colour = qq_point_color, size = 0.6, shape = 16, stroke = 0) +
     annotate(
-      "text", x = 0.97 * axis_max, y = 0.13 * axis_max,
+      "text", x = 0.04 * axis_max, y = 0.96 * axis_max,
       label = label, parse = TRUE,
-      hjust = 1, vjust = 0, size = 3.2, family = base_font
-    ) +
-    annotate(
-      "text", x = 0.97 * axis_max, y = 0.05 * axis_max,
-      label = n_label, parse = TRUE,
-      hjust = 1, vjust = 0, size = 2.6, family = base_font,
-      colour = "#4D4D4D"
+      hjust = 0, vjust = 1, size = 3.2, family = base_font
     ) +
     scale_x_continuous(
       limits = c(0, axis_max), expand = expansion(mult = c(0, 0.02)),
@@ -495,7 +486,7 @@ for (trait in plot_order) {
   )
 
   qq <- prepare_qq_data(dat$P)
-  qq_plots[[trait]] <- create_qq_plot(trait, qq, lambda_gc, nrow(dat))
+  qq_plots[[trait]] <- create_qq_plot(trait, qq, lambda_gc)
   save_plot(
     qq_plots[[trait]],
     file.path(qq_dir, paste0("AWI-Gen_qq_", trait)),
