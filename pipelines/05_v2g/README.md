@@ -32,8 +32,8 @@ The canonical column definitions are listed in `docs/standard_evidence_schema.ts
 ## Run
 
 ```bash
-cp pipelines/v2g/config/v2g_config.example.tsv pipelines/v2g/config/v2g_config.local.tsv
-bash pipelines/v2g/bin/run_v2g_pipeline.sh --config pipelines/v2g/config/v2g_config.local.tsv --step all
+cp pipelines/05_v2g/config/v2g_config.example.tsv pipelines/05_v2g/config/v2g_config.local.tsv
+bash pipelines/05_v2g/bin/run_v2g_pipeline.sh --config pipelines/05_v2g/config/v2g_config.local.tsv --step all
 ```
 
 Available steps are:

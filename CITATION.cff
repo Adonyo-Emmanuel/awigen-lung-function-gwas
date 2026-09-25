@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the associated manuscript."
+title: "AWI-Gen Lung Function GWAS: analysis code"
+type: software
+authors:
+  - family-names: Adonyo
+    given-names: Emmanuel
+repository-code: "https://github.com/Adonyo-Emmanuel/awigen-lung-function-gwas"
+license: MIT
+keywords:
+  - GWAS
+  - lung function
+  - spirometry
+  - AWI-Gen
+  - H3Africa
+  - variant-to-gene
+# On publication, add the manuscript under `preferred-citation`, and add the
+# Zenodo DOI for the release as `doi`.
