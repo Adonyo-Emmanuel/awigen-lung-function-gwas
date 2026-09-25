@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  bash pipelines/v2g/bin/run_v2g_pipeline.sh --config <config.tsv> [--step all|check|manifest|standardise-lines|integrate]
+  bash pipelines/05_v2g/bin/run_v2g_pipeline.sh --config <config.tsv> [--step all|check|manifest|standardise-lines|integrate]
 
 Steps:
   check              Validate required config values and input files.
