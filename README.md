@@ -11,6 +11,7 @@ The repository is organised around analysis functionality. Each analysis module 
 - `pipelines/v2g/functional_annotation_across_evidence_lines/`: all-source integration and summary tables.
 - `pipelines/v2g/config/`: configuration template for local file paths.
 - `pipelines/v2g/docs/`: standard output schema and current script inventory.
+- `pipelines/gwas_plots/`: publication Manhattan and QQ plots (ggplot2) for the meta-analysis results.
 - `data/`: placeholder documenting data availability and access restrictions.
 - `results/`: placeholder for generated outputs.
 
