@@ -52,6 +52,6 @@ plots) and keeps one variant per position (the one with the smallest P value).
 
 The plotting script writes titled plots for individual use and untitled copies
 in `panels/`. `combine_regional_plots.R` arranges the untitled copies 2 × 2 in
-chromosome order with panel letters a–d, and writes
+chromosome order with panel labels such as "a FEV₁/FVC (rs75821233)", and writes
 `AWI-Gen_regional_plots_combined` as PDF, PNG and TIFF (needs the R package
 `png`).

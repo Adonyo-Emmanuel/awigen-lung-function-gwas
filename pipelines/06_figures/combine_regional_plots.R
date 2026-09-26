@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
-# Combine the four untitled LocusZoom regional plots into one 2 x 2 figure
-# with panel letters a-d, ordered by chromosome.
+# Combine the four untitled LocusZoom regional plots into one 2 x 2 figure,
+# ordered by chromosome, with panel labels "a  FEV1/FVC (rsID)"
+# (bold letter, subscript 1 as in the Manhattan and QQ figures).
 #
 # Input: the untitled PNGs written by awigen_locuszoom_plots.sh to
 #   <plots_dir>/panels/awigen_<trait>_<gene>_*.png
@@ -53,9 +54,21 @@ panel_files <- vapply(seq_len(nrow(sentinels)), function(i) {
 }, character(1))
 
 images <- lapply(panel_files, png::readPNG)
+
+trait_expr <- list(
+  FEV1 = quote(FEV[1]),
+  FVC  = quote(FVC),
+  FF   = quote(FEV[1] / FVC),
+  PEF  = quote(PEF)
+)
+panel_labels <- lapply(seq_len(nrow(sentinels)), function(i) {
+  bquote(bold(.(letters[[i]])) ~~ .(trait_expr[[sentinels$trait[[i]]]]) ~
+           "(" * .(sentinels$rsid[[i]]) * ")")
+})
 for (i in seq_along(panel_files)) {
-  message(letters[[i]], ": ", sentinels$gene[[i]], " (chr", sentinels$chromosome[[i]],
-          ")  <- ", basename(panel_files[[i]]))
+  message(letters[[i]], ": ", sentinels$trait[[i]], " (", sentinels$rsid[[i]], "), ",
+          sentinels$gene[[i]], " chr", sentinels$chromosome[[i]],
+          "  <- ", basename(panel_files[[i]]))
 }
 
 # Figure size: 180 mm wide (two 90 mm columns); height follows the panels'
@@ -86,10 +99,10 @@ draw_figure <- function() {
       interpolate = TRUE
     )
     grid::grid.text(
-      letters[[i]],
+      panel_labels[[i]],
       x = grid::unit(2, "mm"), y = grid::unit(1, "npc") - grid::unit(1, "mm"),
       just = c("left", "top"),
-      gp = grid::gpar(fontface = "bold", fontsize = 12, fontfamily = "sans")
+      gp = grid::gpar(fontsize = 11, fontfamily = "sans")
     )
     grid::popViewport()
   }
