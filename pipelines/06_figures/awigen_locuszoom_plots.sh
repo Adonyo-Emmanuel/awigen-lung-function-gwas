@@ -37,6 +37,23 @@ ld_vcf="${metal_dir}/1000G_phase3_AFR_ld/1000G_phase3_AFR_loci.vcf.gz"
 ld_source="${LD_SOURCE:-1000G_Nov2014}"
 
 command -v locuszoom >/dev/null || { echo "locuszoom is not on PATH" >&2; exit 1; }
+
+# LocusZoom 1.4 is written in Python 2 and otherwise runs whichever "python"
+# is first on PATH (modules or conda may put Python 3 there). Find Python 2.
+lz_python=""
+for candidate in "${LZ_PYTHON:-}" python2.7 python2 python /usr/bin/python2.7 /usr/bin/python2 /usr/bin/python; do
+  [[ -n "${candidate}" ]] || continue
+  if command -v "${candidate}" >/dev/null 2>&1 &&
+     "${candidate}" -c 'import sys; sys.exit(0 if sys.version_info[0] == 2 else 1)' 2>/dev/null; then
+    lz_python="$(command -v "${candidate}")"
+    break
+  fi
+done
+[[ -n "${lz_python}" ]] || {
+  echo "LocusZoom needs Python 2.7, but none was found. Set LZ_PYTHON=/path/to/python2.7" >&2
+  exit 1
+}
+echo "Python for LocusZoom: ${lz_python}"
 # LocusZoom calls PLINK to compute LD from the 1000 Genomes reference.
 command -v plink >/dev/null || { echo "plink is not on PATH (e.g. run: module load plink)" >&2; exit 1; }
 mkdir -p "${output_dir}"
@@ -69,7 +86,7 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
   out_prefix="${output_dir}/awigen_${trait}_${gene}"
   echo "Plotting ${gene} (${trait}, ${rsid}, ${chrpos})"
 
-  locuszoom --metal "${metal_file}" --markercol rsid --pvalcol p \
+  "${lz_python}" "$(command -v locuszoom)" --metal "${metal_file}" --markercol rsid --pvalcol p \
     --refsnp "${chrpos}" --flank 500kb \
     --build hg19 "${ld_args[@]}" \
     --plotonly --snpset NULL --no-date --prefix "${out_prefix}" \
