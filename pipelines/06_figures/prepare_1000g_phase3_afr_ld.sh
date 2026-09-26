@@ -117,7 +117,5 @@ while IFS=$'\t' read -r chr start end pos rsid alleles; do
     exit 1
   fi
 done < regions.tsv
-rm -f "${parts[@]}" ./*.tbi.* 2>/dev/null || true
-rm -f ALL.chr*.vcf.gz.tbi
 
 echo "LD reference written to ${out_vcf}"
