@@ -88,7 +88,7 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
   echo "Plotting ${gene} (${trait}, ${rsid}, ${chrpos})"
 
   "${lz_python}" "$(command -v locuszoom)" --metal "${metal_file}" --markercol rsid --pvalcol p \
-    --refsnp "${chrpos}" --flank 500kb \
+    --refsnp "${chrpos}" --flank 1000kb \
     --build hg19 "${ld_args[@]}" \
     --plotonly --snpset NULL --no-date --prefix "${out_prefix}" \
     title="$(trait_label "${trait}"): ${gene} locus" \

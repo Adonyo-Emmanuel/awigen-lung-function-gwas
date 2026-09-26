@@ -30,7 +30,7 @@ sentinel_file="${script_dir}/top4_sentinels_awigen.tsv"
 out_dir="$(cd "$1" && pwd)/1000G_phase3_AFR_ld"
 out_vcf="${out_dir}/1000G_phase3_AFR_loci.vcf.gz"
 base_url="${KG_BASE_URL:-https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502}"
-flank=600000
+flank=1100000
 
 mkdir -p "${out_dir}"
 cd "${out_dir}"

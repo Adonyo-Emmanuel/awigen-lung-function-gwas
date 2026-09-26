@@ -29,7 +29,7 @@ higher-quality PNG output.
 ## Regional association plots
 
 LocusZoom 1.4 plots of the four genome-wide significant loci listed in
-`top4_sentinels_awigen.tsv`, using ±500 kb windows. LD (r²) with the lead
+`top4_sentinels_awigen.tsv`, using ±1 Mb windows. LD (r²) with the lead
 variant is computed from 1000 Genomes Phase 3 African (AFR) samples (GRCh37):
 `prepare_1000g_phase3_afr_ld.sh` downloads just the four regions from the
 1000 Genomes server, and the plotting script passes them to LocusZoom with
@@ -45,6 +45,6 @@ bash pipelines/06_figures/prepare_1000g_phase3_afr_ld.sh <metal_results_dir>   #
 bash pipelines/06_figures/awigen_locuszoom_plots.sh <metal_results_dir> [output_dir]
 ```
 
-The formatting step writes only the traits and regions (sentinel ± 600 kb)
+The formatting step writes only the traits and regions (sentinel ± 1.1 Mb)
 listed in `top4_sentinels_awigen.tsv`, keeps variants with MAF ≥ 1% (matching the Manhattan
 plots) and keeps one variant per position (the one with the smallest P value).

@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
 # Format the METAL results for LocusZoom. Only the traits and regions listed
-# in top4_sentinels_awigen.tsv are written (sentinel +/- 600 kb, slightly
-# wider than the 500 kb plotting flank), so the output files are small.
+# in top4_sentinels_awigen.tsv are written (sentinel +/- 1.1 Mb, slightly
+# wider than the 1 Mb plotting flank), so the output files are small.
 #
 # Output: <trait>_locuszoom_formated.txt with columns rsid ("chr<CHROM>:<POS>")
 # and p. Variants are filtered to MAF >= 1% so the regional plots show the
@@ -36,7 +36,7 @@ trait_files <- c(
 )
 
 maf_threshold <- 0.01
-region_half_width <- 600000L
+region_half_width <- 1100000L
 
 for (trait_name in unique(sentinels$trait)) {
   input_file <- file.path(file_dir, trait_files[[trait_name]])
