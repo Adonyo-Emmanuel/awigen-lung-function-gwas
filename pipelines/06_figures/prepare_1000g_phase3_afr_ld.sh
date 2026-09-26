@@ -51,7 +51,9 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | awk -v f="${flank}" 'NF {
 #   - multi-allelic sites are split into biallelic records;
 #   - at the sentinel position, the record matching the sentinel rsID and
 #     alleles is kept (else the rsID alone, else the first SNP);
-#   - at other positions a SNP is preferred over an indel.
+#   - at other positions a SNP is preferred over an indel;
+#   - indels that span the sentinel position (e.g. an upstream deletion) are
+#     dropped, because LocusZoom's lookup of the sentinel would return them too.
 parts=()
 while IFS=$'\t' read -r chr start end pos rsid alleles; do
   a1="${alleles%/*}"; a2="${alleles#*/}"
@@ -85,6 +87,7 @@ while IFS=$'\t' read -r chr start end pos rsid alleles; do
   bcftools query -f '%CHROM\t%POS\n' "${tag}.snps.vcf.gz" > "${tag}.snp_positions.txt"
   echo -e "${chr}\t${pos}" >> "${tag}.snp_positions.txt"
   bcftools view -V snps -T "^${tag}.snp_positions.txt" "${tag}.split.vcf.gz" -Ou |
+    bcftools view -e "POS<=${pos} && POS+strlen(REF)-1>=${pos}" -Ou |
     bcftools norm -d all -Oz -o "${tag}.other.vcf.gz" 2>>bcftools.log
 
   bcftools concat "${tag}.index.vcf.gz" "${tag}.snps.vcf.gz" "${tag}.other.vcf.gz" -Ou 2>>bcftools.log |
@@ -95,6 +98,16 @@ done < regions.tsv
 
 bcftools concat -Oz -o "${out_vcf}" "${parts[@]}" 2>>bcftools.log
 tabix -f -p vcf "${out_vcf}"
+
+# LocusZoom looks up each sentinel with tabix and needs exactly one record back.
+while IFS=$'\t' read -r chr start end pos rsid alleles; do
+  n=$(tabix "${out_vcf}" "${chr}:${pos}-${pos}" | wc -l)
+  if [[ "${n}" -gt 1 ]]; then
+    echo "ERROR: ${n} records overlap ${rsid} (chr${chr}:${pos}); LocusZoom cannot use them:" >&2
+    tabix "${out_vcf}" "${chr}:${pos}-${pos}" | cut -f1-5 >&2
+    exit 1
+  fi
+done < regions.tsv
 rm -f "${parts[@]}" ./*.tbi.* 2>/dev/null || true
 rm -f ALL.chr*.vcf.gz.tbi
 
