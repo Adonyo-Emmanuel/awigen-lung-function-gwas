@@ -2,7 +2,9 @@
 # Regional association plots for the AWI-Gen genome-wide significant loci,
 # drawn with LocusZoom 1.4 standalone.
 #
-# LD: 1000 Genomes Phase 3 (1000G_Nov2014), AFR super-population, GRCh37.
+# LD: 1000 Genomes AFR super-population, GRCh37. The default reference is
+# Phase 3 (1000G_Nov2014). If its genotype files are not installed, use the
+# Phase 1 panel instead:  LD_SOURCE=1000G_March2012 bash awigen_locuszoom_plots.sh ...
 # Lines: red = genome-wide significance (P = 5e-8),
 #        grey = suggestive significance (P = 5e-6).
 #
@@ -29,11 +31,13 @@ metal_dir="$1"
 output_dir="${2:-${metal_dir}/awigen_regional_assoc_plots}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 sentinel_file="${script_dir}/top4_sentinels_awigen.tsv"
+ld_source="${LD_SOURCE:-1000G_Nov2014}"
 
 command -v locuszoom >/dev/null || { echo "locuszoom is not on PATH" >&2; exit 1; }
 # LocusZoom calls PLINK to compute LD from the 1000 Genomes reference.
 command -v plink >/dev/null || { echo "plink is not on PATH (e.g. run: module load plink)" >&2; exit 1; }
 mkdir -p "${output_dir}"
+echo "LD reference: ${ld_source} AFR (hg19)"
 
 trait_label() {
   case "$1" in
@@ -57,7 +61,7 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
 
   locuszoom --metal "${metal_file}" --markercol rsid --pvalcol p \
     --refsnp "${chrpos}" --flank 500kb \
-    --build hg19 --pop AFR --source 1000G_Nov2014 \
+    --build hg19 --pop AFR --source "${ld_source}" \
     --plotonly --snpset NULL --no-date --prefix "${out_prefix}" \
     title="$(trait_label "${trait}"): ${gene} locus" \
     refsnpName="${rsid}" \
