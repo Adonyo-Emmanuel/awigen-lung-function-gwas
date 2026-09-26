@@ -7,8 +7,8 @@
 # (<metal_results_dir>/1000G_phase3_AFR_ld/1000G_phase3_AFR_loci.vcf.gz) is
 # used automatically. Without it, LocusZoom's built-in reference named by
 # LD_SOURCE is used (default 1000G_Nov2014).
-# Lines: red = genome-wide significance (P = 5e-8),
-#        grey = suggestive significance (P = 5e-6).
+# Lines: red solid = genome-wide significance (P = 5e-8),
+#        grey dashed = suggestive significance (P = 5e-6).
 #
 # Usage:
 #   bash awigen_locuszoom_plots.sh <metal_results_dir> [output_dir]
@@ -77,8 +77,8 @@ trait_label() {
   esac
 }
 
-# Columns: chrpos, rsid, trait, gene (tab- or space-separated; header skipped).
-tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gene; do
+# Columns: chrpos, rsid, trait, gene, alleles (tab- or space-separated; header skipped).
+tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gene _; do
   [[ -z "${chrpos}" ]] && continue
 
   metal_file="${metal_dir}/${trait}_locuszoom_formated.txt"
@@ -100,7 +100,8 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
     refsnpTextSize=0.8 \
     signifLine="7.30103,5.30103" \
     signifLineColor="red,grey50" \
-    signifLineWidth=1 \
+    signifLineWidth="1,1" \
+    signifLineType="1,2" \
     ldColors="gray60,navy,lightskyblue,green,orange,red,purple3" \
     recombColor="blue" \
     recombAxisColor="black"

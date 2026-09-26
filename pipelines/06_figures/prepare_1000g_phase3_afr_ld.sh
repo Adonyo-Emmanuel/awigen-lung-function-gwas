@@ -43,25 +43,57 @@ echo "AFR samples: $(wc -l < afr_samples.txt)"
 tail -n +2 "${sentinel_file}" | tr -d '\r' | awk -v f="${flank}" 'NF {
   split($1, a, ":"); chr = a[1]; sub(/^chr/, "", chr); pos = a[2];
   start = pos - f; if (start < 1) start = 1;
-  print chr "\t" start "\t" pos + f "\t" pos "\t" $2
+  print chr "\t" start "\t" pos + f "\t" pos "\t" $2 "\t" $5
 }' | sort -k1,1n -k2,2n > regions.tsv
 
+# LocusZoom matches variants by chr:pos only and uses the first VCF record at a
+# position, so each position must have exactly one record:
+#   - multi-allelic sites are split into biallelic records;
+#   - at the sentinel position, the record matching the sentinel rsID and
+#     alleles is kept (else the rsID alone, else the first SNP);
+#   - at other positions a SNP is preferred over an indel.
 parts=()
-while IFS=$'\t' read -r chr start end pos rsid; do
-  part="region_chr${chr}_${pos}.vcf.gz"
+while IFS=$'\t' read -r chr start end pos rsid alleles; do
+  a1="${alleles%/*}"; a2="${alleles#*/}"
+  tag="chr${chr}_${pos}"
   echo "Fetching chr${chr}:${start}-${end} (${rsid})"
   bcftools view -r "${chr}:${start}-${end}" -S afr_samples.txt -Ou \
     "${base_url}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz" |
-    bcftools view -m2 -M2 -c 1 -Oz -o "${part}"
-  parts+=("${part}")
+    bcftools norm -m -any -Ou 2>>bcftools.log |
+    bcftools view -c 1 -Oz -o "${tag}.split.vcf.gz"
+  tabix -f -p vcf "${tag}.split.vcf.gz"
 
-  if [[ -z "$(bcftools view -H "${part}" 2>/dev/null | awk -v p="${pos}" '$2 == p' | head -1)" ]]; then
-    echo "  WARNING: ${rsid} (chr${chr}:${pos}) is not in the 1000G Phase 3 AFR data;" \
-         "LD cannot be shown for this locus." >&2
+  # Sentinel record: rsID and alleles, else rsID, else the first SNP there.
+  for filter in \
+    "ID==\"${rsid}\" && ((REF==\"${a1}\" && ALT==\"${a2}\") || (REF==\"${a2}\" && ALT==\"${a1}\"))" \
+    "ID==\"${rsid}\"" \
+    "TYPE==\"snp\""; do
+    bcftools view -r "${chr}:${pos}" -i "${filter}" -Ou "${tag}.split.vcf.gz" |
+      bcftools norm -d all -Oz -o "${tag}.index.vcf.gz" 2>>bcftools.log
+    [[ -n "$(bcftools view -H "${tag}.index.vcf.gz" | head -1)" ]] && break
+  done
+  if [[ -z "$(bcftools view -H "${tag}.index.vcf.gz" | head -1)" ]]; then
+    echo "  WARNING: ${rsid} (chr${chr}:${pos}) is not a polymorphic variant in the" \
+         "1000G Phase 3 AFR samples; LD cannot be shown for this locus." >&2
+  else
+    echo "  sentinel found: $(bcftools view -H "${tag}.index.vcf.gz" | cut -f1-5 | head -1)"
   fi
+
+  # Other positions: SNPs first, then indels only where no SNP exists.
+  bcftools view -e "POS==${pos}" -v snps "${tag}.split.vcf.gz" -Ou |
+    bcftools norm -d all -Oz -o "${tag}.snps.vcf.gz" 2>>bcftools.log
+  bcftools query -f '%CHROM\t%POS\n' "${tag}.snps.vcf.gz" > "${tag}.snp_positions.txt"
+  echo -e "${chr}\t${pos}" >> "${tag}.snp_positions.txt"
+  bcftools view -V snps -T "^${tag}.snp_positions.txt" "${tag}.split.vcf.gz" -Ou |
+    bcftools norm -d all -Oz -o "${tag}.other.vcf.gz" 2>>bcftools.log
+
+  bcftools concat "${tag}.index.vcf.gz" "${tag}.snps.vcf.gz" "${tag}.other.vcf.gz" -Ou 2>>bcftools.log |
+    bcftools sort -Oz -o "${tag}.vcf.gz" 2>>bcftools.log
+  rm -f "${tag}".split.vcf.gz* "${tag}".index.vcf.gz "${tag}".snps.vcf.gz "${tag}".other.vcf.gz "${tag}".snp_positions.txt
+  parts+=("${tag}.vcf.gz")
 done < regions.tsv
 
-bcftools concat -Oz -o "${out_vcf}" "${parts[@]}"
+bcftools concat -Oz -o "${out_vcf}" "${parts[@]}" 2>>bcftools.log
 tabix -f -p vcf "${out_vcf}"
 rm -f "${parts[@]}" ./*.tbi.* 2>/dev/null || true
 rm -f ALL.chr*.vcf.gz.tbi
