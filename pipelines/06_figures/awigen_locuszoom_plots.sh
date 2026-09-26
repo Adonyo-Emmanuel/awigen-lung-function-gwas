@@ -20,7 +20,8 @@
 #   export PATH=${PATH}:<locuszoom_install>/bin
 #
 # LD is looked up by chr:pos; the lead variant is labelled with its rsID.
-# Each plot is written as both PDF and PNG.
+# LocusZoom writes a PDF (page 1 = plot, page 2 = settings log); page 1 is
+# also converted to a 300 dpi PNG if pdftoppm or Ghostscript is available.
 
 set -euo pipefail
 
@@ -92,7 +93,6 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
     --plotonly --snpset NULL --no-date --prefix "${out_prefix}" \
     title="$(trait_label "${trait}"): ${gene} locus" \
     refsnpName="${rsid}" \
-    format=both \
     theme="publication" \
     showPartialGenes=TRUE \
     geneFontSize=0.7 \
@@ -104,6 +104,21 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
     ldColors="gray60,navy,lightskyblue,green,orange,red,purple3" \
     recombColor="blue" \
     recombAxisColor="black"
+
+  for pdf in "${out_prefix}"_*.pdf; do
+    [[ -f "${pdf}" ]] || { echo "No PDF was produced for ${gene}" >&2; exit 1; }
+    png="${pdf%.pdf}.png"
+    if command -v pdftoppm >/dev/null; then
+      pdftoppm -png -r 300 -f 1 -l 1 -singlefile "${pdf}" "${png%.png}"
+    elif command -v gs >/dev/null; then
+      gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300 \
+        -dFirstPage=1 -dLastPage=1 -sOutputFile="${png}" "${pdf}"
+    else
+      echo "  (no pdftoppm or Ghostscript found; PNG not made)"
+      continue
+    fi
+    echo "  wrote ${pdf} and ${png}"
+  done
 done
 
 echo "Plots written to ${output_dir}"
