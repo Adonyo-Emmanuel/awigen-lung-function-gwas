@@ -33,6 +33,13 @@ flank=600000
 
 mkdir -p "${out_dir}"
 cd "${out_dir}"
+: > bcftools.log
+
+# bcftools messages go to bcftools.log; show them if any step fails.
+trap 'status=$?; if [[ ${status} -ne 0 ]]; then
+  echo "ERROR: a step failed (exit ${status}). Last bcftools messages:" >&2
+  tail -20 "${out_dir}/bcftools.log" >&2
+fi' EXIT
 
 echo "Downloading the 1000 Genomes Phase 3 sample list.."
 curl -sSfL -o samples.panel "${base_url}/integrated_call_samples_v3.20130502.ALL.panel"
@@ -58,7 +65,7 @@ parts=()
 while IFS=$'\t' read -r chr start end pos rsid alleles; do
   a1="${alleles%/*}"; a2="${alleles#*/}"
   tag="chr${chr}_${pos}"
-  echo "Fetching chr${chr}:${start}-${end} (${rsid})"
+  echo "Fetching chr${chr}:${start}-${end} (${rsid}); this can take a few minutes.."
   bcftools view -r "${chr}:${start}-${end}" -S afr_samples.txt -Ou \
     "${base_url}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz" |
     bcftools norm -m -any -Ou 2>>bcftools.log |
