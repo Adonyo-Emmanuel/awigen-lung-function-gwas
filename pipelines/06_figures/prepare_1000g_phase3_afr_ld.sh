@@ -10,7 +10,8 @@
 # Writes <metal_results_dir>/1000G_phase3_AFR_ld/1000G_phase3_AFR_loci.vcf.gz
 # (+ .tbi), which awigen_locuszoom_plots.sh uses automatically.
 #
-# Needs internet access (run on a login node) and bcftools and tabix on PATH.
+# Needs internet access (run on a login node) and bcftools, tabix and bgzip
+# on PATH (bgzip and tabix come with htslib/tabix).
 # Source: 1000 Genomes Project Phase 3 release 20130502 (GRCh37).
 
 set -euo pipefail
@@ -20,7 +21,7 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
-for tool in bcftools tabix; do
+for tool in bcftools tabix bgzip; do
   command -v "${tool}" >/dev/null || { echo "${tool} is not on PATH (e.g. module load ${tool})" >&2; exit 1; }
 done
 
@@ -61,51 +62,52 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | awk -v f="${flank}" 'NF {
 #   - at other positions a SNP is preferred over an indel;
 #   - indels that span the sentinel position (e.g. an upstream deletion) are
 #     dropped, because LocusZoom's lookup of the sentinel would return them too.
-parts=()
+body_files=()
 while IFS=$'\t' read -r chr start end pos rsid alleles; do
   a1="${alleles%/*}"; a2="${alleles#*/}"
   tag="chr${chr}_${pos}"
   echo "Fetching chr${chr}:${start}-${end} (${rsid}); this can take a few minutes.."
   bcftools view -r "${chr}:${start}-${end}" -S afr_samples.txt -Ou \
-    "${base_url}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz" |
+    "${base_url}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz" \
+    2>>bcftools.log |
     bcftools norm -m -any -Ou 2>>bcftools.log |
-    bcftools view -c 1 -Oz -o "${tag}.split.vcf.gz"
-  tabix -f -p vcf "${tag}.split.vcf.gz"
+    bcftools view -c 1 2>>bcftools.log > "${tag}.split.vcf"
+
+  [[ -f header.vcf ]] || grep '^#' "${tag}.split.vcf" > header.vcf
 
   # Sentinel record: rsID and alleles, else rsID, else the first SNP there.
-  for filter in \
-    "ID==\"${rsid}\" && ((REF==\"${a1}\" && ALT==\"${a2}\") || (REF==\"${a2}\" && ALT==\"${a1}\"))" \
-    "ID==\"${rsid}\"" \
-    "TYPE==\"snp\""; do
-    bcftools view -r "${chr}:${pos}" -i "${filter}" -Ou "${tag}.split.vcf.gz" |
-      bcftools norm -d all -Oz -o "${tag}.index.vcf.gz" 2>>bcftools.log
-    [[ -n "$(bcftools view -H "${tag}.index.vcf.gz" | head -1)" ]] && break
-  done
-  if [[ -z "$(bcftools view -H "${tag}.index.vcf.gz" | head -1)" ]]; then
+  grep -v '^#' "${tag}.split.vcf" | awk -F'\t' -v p="${pos}" -v rs="${rsid}" -v a1="${a1}" -v a2="${a2}" '
+    $2 == p {
+      snp = (length($4) == 1 && length($5) == 1)
+      if ($3 == rs && (($4 == a1 && $5 == a2) || ($4 == a2 && $5 == a1))) { if (!m1) m1 = $0 }
+      else if ($3 == rs) { if (!m2) m2 = $0 }
+      else if (snp)      { if (!m3) m3 = $0 }
+    }
+    END { if (m1) print m1; else if (m2) print m2; else if (m3) print m3 }' > "${tag}.index.txt"
+
+  if [[ -s "${tag}.index.txt" ]]; then
+    echo "  sentinel found: $(cut -f1-5 "${tag}.index.txt")"
+  else
     echo "  WARNING: ${rsid} (chr${chr}:${pos}) is not a polymorphic variant in the" \
          "1000G Phase 3 AFR samples; LD cannot be shown for this locus." >&2
-  else
-    echo "  sentinel found: $(bcftools view -H "${tag}.index.vcf.gz" | cut -f1-5 | head -1)"
   fi
 
-  # Other positions: SNPs first, then indels only where no SNP exists.
-  bcftools view -e "POS==${pos}" -v snps "${tag}.split.vcf.gz" -Ou |
-    bcftools norm -d all -Oz -o "${tag}.snps.vcf.gz" 2>>bcftools.log
-  bcftools query -f '%CHROM\t%POS\n' "${tag}.snps.vcf.gz" > "${tag}.snp_positions.txt"
-  echo -e "${chr}\t${pos}" >> "${tag}.snp_positions.txt"
-  bcftools view -V snps -T "^${tag}.snp_positions.txt" "${tag}.split.vcf.gz" -Ou |
-    bcftools view -e "POS<=${pos} && POS+strlen(REF)-1>=${pos}" -Ou |
-    bcftools norm -d all -Oz -o "${tag}.other.vcf.gz" 2>>bcftools.log
+  # Other positions: one record per position, SNPs before indels; drop
+  # anything at, or spanning, the sentinel position.
+  grep -v '^#' "${tag}.split.vcf" | awk -F'\t' -v OFS='\t' -v p="${pos}" '
+    $2 != p && !($2 < p && $2 + length($4) - 1 >= p) {
+      print ((length($4) == 1 && length($5) == 1) ? 0 : 1), $0
+    }' | sort -t$'\t' -k3,3n -k1,1n -s | awk -F'\t' '!seen[$3]++' | cut -f2- > "${tag}.others.txt"
 
-  bcftools concat "${tag}.index.vcf.gz" "${tag}.snps.vcf.gz" "${tag}.other.vcf.gz" -Ou 2>>bcftools.log |
-    bcftools sort -Oz -o "${tag}.vcf.gz" 2>>bcftools.log
-  rm -f "${tag}".split.vcf.gz* "${tag}".index.vcf.gz "${tag}".snps.vcf.gz "${tag}".other.vcf.gz "${tag}".snp_positions.txt
-  parts+=("${tag}.vcf.gz")
+  cat "${tag}.index.txt" "${tag}.others.txt" | sort -t$'\t' -k2,2n -s > "${tag}.body.txt"
+  rm -f "${tag}.split.vcf" "${tag}.index.txt" "${tag}.others.txt"
+  body_files+=("${tag}.body.txt")
 done < regions.tsv
 
-bcftools concat -Oz -o "${out_vcf}" "${parts[@]}" 2>>bcftools.log
+# Regions are already in chromosome order.
+cat header.vcf "${body_files[@]}" | bgzip -c > "${out_vcf}"
+rm -f header.vcf "${body_files[@]}" ./*.tbi 2>/dev/null || true
 tabix -f -p vcf "${out_vcf}"
-
 # LocusZoom looks up each sentinel with tabix and needs exactly one record back.
 while IFS=$'\t' read -r chr start end pos rsid alleles; do
   n=$(tabix "${out_vcf}" "${chr}:${pos}-${pos}" | wc -l)
