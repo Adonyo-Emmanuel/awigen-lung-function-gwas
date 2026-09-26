@@ -11,7 +11,9 @@
 #
 # <metal_results_dir> must contain <trait>_locuszoom_formated.txt, made by
 # format_locuszoom_input.R. The loci are listed in top4_sentinels_awigen.tsv
-# (next to this script). LocusZoom must be on PATH.
+# (next to this script). LocusZoom and PLINK must be on PATH, e.g.
+#   module load R/4.3.1 plink
+#   export PATH=${PATH}:<locuszoom_install>/bin
 #
 # LD is looked up by chr:pos; the lead variant is labelled with its rsID.
 # Each plot is written as both PDF and PNG.
@@ -29,6 +31,8 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 sentinel_file="${script_dir}/top4_sentinels_awigen.tsv"
 
 command -v locuszoom >/dev/null || { echo "locuszoom is not on PATH" >&2; exit 1; }
+# LocusZoom calls PLINK to compute LD from the 1000 Genomes reference.
+command -v plink >/dev/null || { echo "plink is not on PATH (e.g. run: module load plink)" >&2; exit 1; }
 mkdir -p "${output_dir}"
 
 trait_label() {

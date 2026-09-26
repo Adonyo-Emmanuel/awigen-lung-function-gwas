@@ -35,6 +35,7 @@ and the plot title names the trait and nearest gene. Each plot is written as
 PDF and PNG.
 
 ```bash
+module load R/4.3.1 plink   # LocusZoom needs PLINK to compute LD
 export PATH=${PATH}:<locuszoom_install>/bin
 Rscript pipelines/06_figures/format_locuszoom_input.R <metal_results_dir>
 bash pipelines/06_figures/awigen_locuszoom_plots.sh <metal_results_dir> [output_dir]
