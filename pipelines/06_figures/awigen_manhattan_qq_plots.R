@@ -121,8 +121,8 @@ maf_threshold <- 0.01
 # Manhattan appearance.
 chromosome_colors <- c("#1F4E99", "#A6A6A6")  # odd = blue, even = grey
 locus_color <- "#D7191C"
-locus_half_window <- 500000L
-locus_highlight_p <- 1e-3
+locus_half_window <- 1000000L
+locus_highlight_p <- genome_wide_threshold
 downsample_p <- 0.05
 downsample_keep <- 0.10
 chromosome_gap <- 15e6
