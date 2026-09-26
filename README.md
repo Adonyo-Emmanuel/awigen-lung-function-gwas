@@ -30,6 +30,7 @@ Supporting folders:
 
 | Manuscript item | Description | Script |
 |-----------------|-------------|--------|
+| Figure _X_ | Regional association plots of the four genome-wide loci | [`pipelines/06_figures/awigen_locuszoom_plots.sh`](pipelines/06_figures/awigen_locuszoom_plots.sh) |
 | Figure _X_ | Manhattan plots for FEV1, FVC, FEV1/FVC and PEF | [`pipelines/06_figures/awigen_manhattan_qq_plots.R`](pipelines/06_figures/awigen_manhattan_qq_plots.R) |
 | Supplementary Figure _X_ | QQ plots with λGC | [`pipelines/06_figures/awigen_manhattan_qq_plots.R`](pipelines/06_figures/awigen_manhattan_qq_plots.R) |
 | Table _X_ | V2G gene summary | [`pipelines/05_v2g/functional_annotation_across_evidence_lines/build_all_source_v2g_tables.R`](pipelines/05_v2g/functional_annotation_across_evidence_lines/build_all_source_v2g_tables.R) |

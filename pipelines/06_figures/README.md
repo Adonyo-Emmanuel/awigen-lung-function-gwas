@@ -25,3 +25,18 @@ Rscript pipelines/06_figures/awigen_manhattan_qq_plots.R <metal_results_dir> [ou
 
 R packages: `data.table`, `ggplot2`, `ggrepel`, and optionally `ragg` for
 higher-quality PNG output.
+
+## Regional association plots
+
+LocusZoom 1.4 plots of the four genome-wide significant loci listed in
+`top4_sentinels_awigen.tsv`, using ±500 kb windows and LD from 1000 Genomes
+Phase 3 AFR (GRCh37).
+
+```bash
+export PATH=${PATH}:<locuszoom_install>/bin
+Rscript pipelines/06_figures/format_locuszoom_input.R <metal_results_dir>
+bash pipelines/06_figures/awigen_locuszoom_plots.sh <metal_results_dir> [output_dir]
+```
+
+The formatting step keeps variants with MAF ≥ 1% (matching the Manhattan
+plots) and keeps one variant per position (the one with the smallest P value).
