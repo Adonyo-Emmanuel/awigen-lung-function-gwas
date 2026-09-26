@@ -29,15 +29,19 @@ higher-quality PNG output.
 ## Regional association plots
 
 LocusZoom 1.4 plots of the four genome-wide significant loci listed in
-`top4_sentinels_awigen.tsv`, using ±500 kb windows and LD from 1000 Genomes
-Phase 3 AFR (GRCh37). The lead variant is labelled with its rsID
+`top4_sentinels_awigen.tsv`, using ±500 kb windows. LD (r²) with the lead
+variant is computed from 1000 Genomes Phase 3 African (AFR) samples (GRCh37):
+`prepare_1000g_phase3_afr_ld.sh` downloads just the four regions from the
+1000 Genomes server, and the plotting script passes them to LocusZoom with
+`--ld-vcf`. The lead variant is labelled with its rsID
 and the plot title names the trait and nearest gene. Each plot is written as
 PDF and PNG.
 
 ```bash
-module load R/4.3.1 plink   # LocusZoom needs PLINK to compute LD
+module load R/4.3.1 plink bcftools tabix   # module names vary by cluster
 export PATH=${PATH}:<locuszoom_install>/bin
 Rscript pipelines/06_figures/format_locuszoom_input.R <metal_results_dir>
+bash pipelines/06_figures/prepare_1000g_phase3_afr_ld.sh <metal_results_dir>   # needs internet, bcftools, tabix
 bash pipelines/06_figures/awigen_locuszoom_plots.sh <metal_results_dir> [output_dir]
 ```
 
