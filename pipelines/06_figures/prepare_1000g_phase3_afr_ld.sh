@@ -56,6 +56,8 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | awk -v f="${flank}" 'NF {
 
 # LocusZoom matches variants by chr:pos only and uses the first VCF record at a
 # position, so each position must have exactly one record:
+#   - structural variants (ALT like <CN0>) are dropped: they can span the
+#     sentinel and LocusZoom cannot compute r2 for them;
 #   - multi-allelic sites are split into biallelic records;
 #   - at the sentinel position, the record matching the sentinel rsID and
 #     alleles is kept (else the rsID alone, else the first SNP);
@@ -71,7 +73,8 @@ while IFS=$'\t' read -r chr start end pos rsid alleles; do
     "${base_url}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz" \
     2>>bcftools.log |
     bcftools norm -m -any -Ou 2>>bcftools.log |
-    bcftools view -c 1 2>>bcftools.log > "${tag}.split.vcf"
+    bcftools view -c 1 2>>bcftools.log |
+    awk -F'\t' '/^#/ || $5 !~ /^</' > "${tag}.split.vcf"   # drop structural variants (<CN0>, <DEL>, ...)
 
   [[ -f header.vcf ]] || grep '^#' "${tag}.split.vcf" > header.vcf
 
