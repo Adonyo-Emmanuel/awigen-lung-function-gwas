@@ -77,21 +77,17 @@ trait_label() {
   esac
 }
 
-# Columns: chrpos, rsid, trait, gene, alleles (tab- or space-separated; header skipped).
-tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gene _; do
-  [[ -z "${chrpos}" ]] && continue
+mkdir -p "${output_dir}/panels"
 
-  metal_file="${metal_dir}/${trait}_locuszoom_formated.txt"
-  [[ -f "${metal_file}" ]] || { echo "Missing ${metal_file}" >&2; exit 1; }
-
-  out_prefix="${output_dir}/awigen_${trait}_${gene}"
-  echo "Plotting ${gene} (${trait}, ${rsid}, ${chrpos})"
-
+# Run LocusZoom for one locus and convert page 1 of the PDF to PNG.
+#   $1 = output prefix; remaining arguments are extra plot settings (e.g. title).
+plot_locus() {
+  local prefix="$1"; shift
   "${lz_python}" "$(command -v locuszoom)" --metal "${metal_file}" --markercol rsid --pvalcol p \
     --refsnp "${chrpos}" --flank 1000kb \
     --build hg19 "${ld_args[@]}" \
-    --plotonly --snpset NULL --no-date --prefix "${out_prefix}" \
-    title="$(trait_label "${trait}"): ${gene} locus" \
+    --plotonly --snpset NULL --no-date --prefix "${prefix}" \
+    "$@" \
     refsnpName="${rsid}" \
     theme="publication" \
     showPartialGenes=TRUE \
@@ -106,8 +102,9 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
     recombColor="blue" \
     recombAxisColor="black"
 
-  for pdf in "${out_prefix}"_*.pdf; do
-    [[ -f "${pdf}" ]] || { echo "No PDF was produced for ${gene}" >&2; exit 1; }
+  local pdf png
+  for pdf in "${prefix}"_*.pdf; do
+    [[ -f "${pdf}" ]] || { echo "No PDF was produced for ${prefix}" >&2; exit 1; }
     png="${pdf%.pdf}.png"
     if command -v pdftoppm >/dev/null; then
       pdftoppm -png -r 300 -f 1 -l 1 -singlefile "${pdf}" "${png%.png}"
@@ -120,6 +117,21 @@ tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gen
     fi
     echo "  wrote ${pdf} and ${png}"
   done
+}
+
+# Columns: chrpos, rsid, trait, gene, alleles (tab- or space-separated; header skipped).
+tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gene _; do
+  [[ -z "${chrpos}" ]] && continue
+
+  metal_file="${metal_dir}/${trait}_locuszoom_formated.txt"
+  [[ -f "${metal_file}" ]] || { echo "Missing ${metal_file}" >&2; exit 1; }
+
+  echo "Plotting ${gene} (${trait}, ${rsid}, ${chrpos})"
+  # Titled plot for individual use.
+  plot_locus "${output_dir}/awigen_${trait}_${gene}" title="$(trait_label "${trait}"): ${gene} locus"
+  # Untitled copy for the combined multi-panel figure (panel letters added later).
+  plot_locus "${output_dir}/panels/awigen_${trait}_${gene}"
 done
 
 echo "Plots written to ${output_dir}"
+echo "Untitled panels for the combined figure: ${output_dir}/panels"

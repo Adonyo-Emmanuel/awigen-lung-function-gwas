@@ -43,8 +43,15 @@ export PATH=${PATH}:<locuszoom_install>/bin
 Rscript pipelines/06_figures/format_locuszoom_input.R <metal_results_dir>
 bash pipelines/06_figures/prepare_1000g_phase3_afr_ld.sh <metal_results_dir>   # needs internet, bcftools, tabix
 bash pipelines/06_figures/awigen_locuszoom_plots.sh <metal_results_dir> [output_dir]
+Rscript pipelines/06_figures/combine_regional_plots.R <metal_results_dir>        # 2 x 2 figure, panels a-d
 ```
 
 The formatting step writes only the traits and regions (sentinel ± 1.1 Mb)
 listed in `top4_sentinels_awigen.tsv`, keeps variants with MAF ≥ 1% (matching the Manhattan
 plots) and keeps one variant per position (the one with the smallest P value).
+
+The plotting script writes titled plots for individual use and untitled copies
+in `panels/`. `combine_regional_plots.R` arranges the untitled copies 2 × 2 in
+chromosome order with panel letters a–d, and writes
+`AWI-Gen_regional_plots_combined` as PDF, PNG and TIFF (needs the R package
+`png`).
