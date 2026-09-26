@@ -30,7 +30,9 @@ higher-quality PNG output.
 
 LocusZoom 1.4 plots of the four genome-wide significant loci listed in
 `top4_sentinels_awigen.tsv`, using ±500 kb windows and LD from 1000 Genomes
-Phase 3 AFR (GRCh37).
+Phase 3 AFR (GRCh37). The lead variant is labelled with its rsID
+and the plot title names the trait and nearest gene. Each plot is written as
+PDF and PNG.
 
 ```bash
 export PATH=${PATH}:<locuszoom_install>/bin

@@ -12,6 +12,9 @@
 # <metal_results_dir> must contain <trait>_locuszoom_formated.txt, made by
 # format_locuszoom_input.R. The loci are listed in top4_sentinels_awigen.tsv
 # (next to this script). LocusZoom must be on PATH.
+#
+# LD is looked up by chr:pos; the lead variant is labelled with its rsID.
+# Each plot is written as both PDF and PNG.
 
 set -euo pipefail
 
@@ -38,21 +41,23 @@ trait_label() {
   esac
 }
 
-# Columns: rsid, trait, gene (tab- or space-separated; header skipped).
-tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r rsid trait gene; do
-  [[ -z "${rsid}" ]] && continue
+# Columns: chrpos, rsid, trait, gene (tab- or space-separated; header skipped).
+tail -n +2 "${sentinel_file}" | tr -d '\r' | while read -r chrpos rsid trait gene; do
+  [[ -z "${chrpos}" ]] && continue
 
   metal_file="${metal_dir}/${trait}_locuszoom_formated.txt"
   [[ -f "${metal_file}" ]] || { echo "Missing ${metal_file}" >&2; exit 1; }
 
   out_prefix="${output_dir}/awigen_${trait}_${gene}"
-  echo "Plotting ${gene} (${trait}, ${rsid})"
+  echo "Plotting ${gene} (${trait}, ${rsid}, ${chrpos})"
 
   locuszoom --metal "${metal_file}" --markercol rsid --pvalcol p \
-    --refsnp "${rsid}" --flank 500kb \
+    --refsnp "${chrpos}" --flank 500kb \
     --build hg19 --pop AFR --source 1000G_Nov2014 \
     --plotonly --snpset NULL --no-date --prefix "${out_prefix}" \
     title="$(trait_label "${trait}"): ${gene} locus" \
+    refsnpName="${rsid}" \
+    format=both \
     theme="publication" \
     showPartialGenes=TRUE \
     geneFontSize=0.7 \
